@@ -259,8 +259,9 @@ elif menu=="Dashboard Fotografías":
         fechas_all_fmt=[item[6:]+'/'+item[4:6]+'/'+item[:4] for item in fechas_all]
         
         st.header('Opción quitar el fondo')
-        st.info('Si deseas quitar el fondo a las fotografías, deja marcada esta opción. En caso contrario, desmarca la casilla que verás a continuación.')
-        sinfondo=st.checkbox("Quitar el fondo de las fotografías",value=True)
+        st.info('Si deseas quitar el fondo a las fotografías, marca la opción que se muestra a continuación.')
+        sinfondo=st.checkbox("Quitar el fondo de las fotografías.")
+        st.warning('Atención: La opción quitar el fondo aumenta el tiempo en que las fotografías tardan en cargar.')
         
         st.header("Elegir el período de referencia")
         
@@ -272,7 +273,6 @@ elif menu=="Dashboard Fotografías":
         finiper = st.date_input(label="Escoge la fecha inicial del período de referencia",
                              value=datetime.datetime(int(fechas_all[-1][:4])-1,int(fechas_all[-1][4:6]),1),
                              max_value=datetime.datetime(int(fechas_all[-1][:4]),int(fechas_all[-1][4:6]),int(fechas_all[-1][6:])))
-        st.write(fechas_all[-1])
         st.success('Tu período seleccionado es: '+finiper.strftime("%d/%m/%Y")+'-'+fechas_all_fmt[-1]+'.')
         
         fechas= [fechas_all[i] for i in range(0,len(fechas_all)) if finiper.strftime("%Y%m%d")<=fechas_all[i]]
