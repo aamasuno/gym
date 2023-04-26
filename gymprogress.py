@@ -19,7 +19,7 @@ from rembg import remove
 
 st.set_page_config(layout="wide")
 
-deta = Deta("f116q")
+deta = Deta("a0k3zvhe_oQqy7qtLHt2jykvZ3nu1VFaEQPY5kRRT")
 
 username="Alvaro Amasuno"
 
