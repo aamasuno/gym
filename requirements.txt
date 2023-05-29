@@ -3,3 +3,4 @@ deta
 pdfplumber
 plotly
 rembg
+pypdfium2
