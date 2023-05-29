@@ -16,6 +16,8 @@ import plotly.graph_objects as go
 import datetime
 import numpy as np
 from rembg import remove
+import base64
+import pypdfium2 as pdfium
 
 st.set_page_config(layout="wide")
 
@@ -24,7 +26,7 @@ deta = Deta("a0k3zvhe_oQqy7qtLHt2jykvZ3nu1VFaEQPY5kRRT")
 username="Alvaro Amasuno"
 
 st.sidebar.title('Menú')
-menu=st.sidebar.radio('Escoge una opción',['Dashboard Control de Medidas','Dashboard Fotografías','Subir PDF de Control de Medidas y Dieta','Subir Fotografías'])
+menu=st.sidebar.radio('Escoge una opción',['Dashboard Control de Medidas','Dashboard Fotografías','Ver y Descargar PDF de Control de Medidas y Dieta','Subir PDF de Control de Medidas y Dieta','Subir Fotografías'])
 
 # Abrir instancia DETA DRIVE para documentos
 docs = deta.Drive(username.replace(" ","_")+'_docs')
@@ -176,11 +178,6 @@ elif menu == 'Dashboard Control de Medidas':
         st.plotly_chart(fig3,use_container_width=True)
         
         st.header('Descargas')
-        st.subheader('Descargar PDF de Control de Medidas y Dieta')
-        st.download_button(label="Descargar control de medidas y dieta en PDF", 
-                 data=docs.get(username+'.pdf').read(),
-                 file_name=username+'.pdf',
-                 mime='application/octet-stream')
         st.subheader('Descargar histórico de medidas')
         st.download_button(label="Descargar histórico de medidas en CSV", 
                  data=df_all.to_csv(sep=";",index=False).encode('utf-8'),
@@ -191,7 +188,25 @@ elif menu == 'Dashboard Control de Medidas':
                  data=df.to_csv(sep=";",index=False).encode('utf-8'),
                  file_name=username+'_filtrado.csv',
                  mime='text/csv')
+
     else:
+        st.error("No se ha encontrado datos de medidas. Por favor, sube el archivo correspondiente en el apartado 'Subir PDF de Control de Medidas y Dieta'.")
+
+elif menu == 'Ver y Descargar PDF de Control de Medidas y Dieta':
+    st.title('Ver y Descargar PDF de Control de Medidas y Dieta')
+    try:
+        pdf = pdfium.PdfDocument(docs.get(username+'.pdf').read())
+        n_pages = len(pdf)
+        for page_number in range(n_pages):
+            page = pdf.get_page(page_number)
+            pil_image = page.render(scale=1).to_pil()
+            st.image(pil_image)
+        
+        st.download_button(label="Descargar control de medidas y dieta en PDF", 
+                 data=docs.get(username+'.pdf').read(),
+                 file_name=username+'.pdf',
+                 mime='application/octet-stream')
+    except:
         st.error("No se ha encontrado datos de medidas. Por favor, sube el archivo correspondiente en el apartado 'Subir PDF de Control de Medidas y Dieta'.")
 
 elif menu == 'Subir Fotografías':
