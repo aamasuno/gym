@@ -4,3 +4,4 @@ pdfplumber
 plotly
 rembg
 pypdfium2
+streamlit-option-menu
