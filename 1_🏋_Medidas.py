@@ -9,6 +9,7 @@ import streamlit as st
 import pandas as pd
 from deta import Deta
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import datetime
 import numpy as np
 
@@ -42,91 +43,68 @@ if csv is not None:
     df=df_all.copy()
     df[df.columns[-1]]=pd.to_datetime(df[df.columns[-1]],format="%d/%m/%Y")
     
-    st.header("Elegir el período de referencia")
+    st.header(":green[Período de referencia]")
     
     st.info('A continuación podrás configurar el inicio del período de referencia que quieras observar.\
-            Por defecto, se selecciona el día 1 del mes actual y año anterior a tu última fecha de revisión.')
-    st.warning('¡Cuidado! La fecha a elegir se mostrará en formato AAAA/MM/DD. Puedes elegirla desde el menú desplegable\
-               o escribirla en el formato especificado directamente.')
+            Por defecto, se selecciona el día uno del mes actual y año anterior a tu última fecha de revisión.')
     
-    fini = st.date_input(label="Escoge la fecha inicial del período de referencia",
+    fini = st.date_input(label="Escoge la fecha inicial del período de referencia (formato AAAA/MM/DD) ",
                          value=datetime.datetime(df.iloc[-1,-1].year-1,df.iloc[-1,-1].month,1),
                          max_value=df.iloc[-1,-1])
     st.success('Tu período seleccionado es: '+fini.strftime("%d/%m/%Y")+'-'+df.iloc[-1,-1].date().strftime("%d/%m/%Y")+'.')
     
     df=df[df[df.columns[-1]] >= np.datetime64(fini)]    
     
-    st.header('Medidas a fecha ' + df.iloc[-1,len(df.columns)-1].strftime("%d/%m/%Y"))     
+    st.header(':green[Medidas a fecha ' + df.iloc[-1,len(df.columns)-1].strftime("%d/%m/%Y")+']')     
     
     # Aviso solo un registro
     if len(df)==1:
         anterior=-1
-        st.warning('Solamente consta un registro en el periodo de referencia. No se mostrarán aumentos o diferencias respecto al periodo anterior.')
+        st.warning('Solamente consta un registro en el periodo de referencia. No se mostrarán aumentos o diferencias respecto al periodo anterior o acumulado.')
     else:
         anterior=-2
-        st.info('Las flechas indican el aumento o disminución de la medida respecto a la fecha de la penúltima revisión: '+ df.iloc[-2,len(df.columns)-1].strftime("%d/%m/%Y") +'.')
+        st.info('La primera flecha indica el aumento o disminución de la medida respecto a la fecha de la\
+                penúltima revisión: '+ df.iloc[-2,len(df.columns)-1].strftime("%d/%m/%Y") +'. La segunda flecha\
+                indica el aumento o disminución de la medida respecto al primer registro del período \
+                de referencia: '+ df.iloc[0,len(df.columns)-1].strftime("%d/%m/%Y") +'.')
     
-    fig=go.Figure()
-    k=0
-    for i in range(0,2):
-        for j in range(0,4):
-            fig.add_trace(go.Indicator(
-                mode = "number+delta",
-                value = df.iloc[-1,k],
-                delta = {'reference':df.iloc[anterior,k]},
-                title = {'text':df.columns[k]},
-                domain = {'row':i, 'column':j}
-                ))
-            k = k+1
-    fig.update_layout(grid = {'rows': 2, 'columns': 4, 'pattern': "independent"})
+    for i in range(len(df.columns)-1):
+        st.subheader(':green['+df.columns[i]+']')
+        c1,c2=st.columns([0.25,0.75])
+        fig=make_subplots(rows=2,cols=1,row_heights=[0.7,0.3])
+        fig.update_layout(grid = {'rows': 2, 'columns': 1, 'pattern': "independent"})
+        fig.add_trace(go.Indicator(
+        mode = "number+delta",
+        value = df.iloc[-1,i],
+        delta = {'reference':df.iloc[anterior,i]},domain={'x': [0,1], 'y': [0.3,1]}
+        ))
+        fig.add_trace(go.Indicator(
+        mode = "delta",
+        value = df.iloc[-1,i],
+        delta = {'reference':df.iloc[0,i]},
+        title = {'text':'Dif. acumulada'},domain={'x': [0.15,0.85], 'y': [0,0.3]}
+        ))
+        #fig.update_layout(grid = {'rows': 2, 'columns': 1, 'pattern': "independent"})
+        c1.plotly_chart(fig,use_container_width=True)
+        fig1=go.Figure()
+        fig1.add_trace(go.Scatter(x=df[df.columns[-1]],y=df[df.columns[i]],
+            mode='lines+markers',line_shape='spline',name=df.columns[i],line_color='rgb(0,204,102)'))
+        fig1.update_xaxes(showgrid=True, ticklabelmode="period", dtick="M1", tickformat="%d/%m/%Y",title_text='Fecha')
+        if (df.columns[i]=='PESO'):
+            fig1.update_yaxes(title_text='kg')
+        else:
+            fig1.update_yaxes(title_text='cm')
+        fig1.update_layout(hovermode="x unified")
+        c2.plotly_chart(fig1,use_container_width=True)
     
-    st.plotly_chart(fig,use_container_width=True)
-    
-    st.header('Diferencia de medidas acumulada a fecha de ' + df.iloc[-1,len(df.columns)-1].strftime("%d/%m/%Y"))
-    st.info('Las flechas indican el aumento o disminución de la medida respecto al primer registro del período de referencia: '+ df.iloc[0,len(df.columns)-1].strftime("%d/%m/%Y") +'.')
-    
-    # Aviso solo un registro
-    if anterior==-1:
-        st.warning('Solamente consta un registro en el período de referencia. No se mostrará ninguna diferencia acumulada.')
-    fig2=go.Figure()
-    k=0
-    for i in range(0,2):
-        for j in range(0,4):
-            fig2.add_trace(go.Indicator(
-                mode = "delta",
-                value = df.iloc[-1,k],
-                delta = {'reference':df.iloc[0,k]},
-                title = {'text':df.columns[k]},
-                domain = {'row':i, 'column':j}
-                ))
-            k = k+1
-    fig2.update_layout(grid = {'rows': 2, 'columns': 4, 'pattern': "independent"})
-    
-    st.plotly_chart(fig2,use_container_width=True)
-    
+# Descargas   
 
-    st.header("Gráfica interactiva de medidas en el período de referencia")
-    st.info("Aprieta o haz click sobre el nombre de una medida para ocultar o mostrar su serie de datos. Si deseas ver una\
-            única medida, aprieta o haz doble click en el nombre de esa medida y el resto se ocultarán automáticamente.")
-    st.info("Aprieta o pasa el cursor sobre un punto de la gráfica para ver el valor númerico de todas las medidas visibles\
-            en una fecha concreta.")
-
-    fig3=go.Figure()
-    for column in df.columns[0:-1]:
-        fig3.add_trace(go.Scatter(x=df[df.columns[-1]],y=df[column],
-            mode='lines+markers',name=column))
-    fig3.update_xaxes(showgrid=True, ticklabelmode="period", dtick="M1", tickformat="%d/%m/%Y",title_text='Fecha')
-    fig3.update_yaxes(title_text='Valor de la medida')
-    fig3.update_layout(hovermode="x unified",title_text="Evolución de medidas")
-    st.plotly_chart(fig3,use_container_width=True)
-    
-    st.header('Descargas')
-    st.subheader('Descargar histórico de medidas')
+    st.subheader(':green[Descargar histórico de medidas]')
     st.download_button(label="Descargar histórico de medidas en CSV", 
              data=df_all.to_csv(sep=";",index=False).encode('utf-8'),
              file_name=username+'.csv',
              mime='text/csv')
-    st.subheader('Descargar medidas en el período de referencia')
+    st.subheader(':green[Descargar medidas en el período de referencia]')
     st.download_button(label="Descargar medidas del período de referencia en CSV", 
              data=df.to_csv(sep=";",index=False).encode('utf-8'),
              file_name=username+'_filtrado.csv',

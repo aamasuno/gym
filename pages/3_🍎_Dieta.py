@@ -6,21 +6,11 @@ Created on Sat Jun 24 19:15:48 2023
 """
 
 import streamlit as st
-import pandas as pd
-from PIL import Image
-from io import BytesIO
 from deta import Deta
-import io
-import pdfplumber
-import plotly.graph_objects as go
-import datetime
-import numpy as np
-from rembg import remove
-import base64
 import pypdfium2 as pdfium
 
 st.set_page_config(layout="wide")
-
+st.title(':green[Dieta]')
 # Recuperar info usuario y key Deta de session state
 deta = Deta(st.session_state["keydeta"])
 username = st.session_state["username"]

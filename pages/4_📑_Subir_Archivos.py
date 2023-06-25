@@ -16,6 +16,7 @@ import pdfplumber
 
 st.set_page_config(page_title="Subir Archivos",
                    layout="wide")
+st.title(':green[Subir Archivos]')
 
 seleccionado = option_menu("Escoge una opción",
     ["PDF de Control de Medidas y Dieta","Fotografias"],
